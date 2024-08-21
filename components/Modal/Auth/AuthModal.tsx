@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CopyIcon } from "@radix-ui/react-icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +17,9 @@ import { authModalState } from '@/app/atoms/authModal';
 import { useRecoilState } from 'recoil';
 import AuthInputs from './AuthInputs';
 import OAuthButtons from './OAuthButtons';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/app/firebase/clientApp';
+import ResetPassword from './ResetPassword';
 
 type AuthModalProps = {
     
@@ -24,13 +27,23 @@ type AuthModalProps = {
 
 const AuthModal:React.FC<AuthModalProps> = () => {
     const [modalState, setModalState] = useRecoilState(authModalState)
-    
+    const [user, loading,error] = useAuthState(auth);
+
+
     const handleClose = () => {
       setModalState(prev => ({
         ...prev,
         open: false,
-      }))
-    }
+      }));
+    };
+  
+    useEffect(() => {
+      if (user) {
+        handleClose();
+      }
+    }, [user]);
+
+
     return (
         <>
     <Dialog open={modalState.open} onOpenChange={handleClose}>
@@ -53,12 +66,17 @@ const AuthModal:React.FC<AuthModalProps> = () => {
 
 
 
-            {/*<ResetPassword/>*/}
-            <OAuthButtons />
-            <div className='text-gray-500 font-bold text-center mb-2'>OR</div>
-             <AuthInputs/>
-
-
+          {modalState.view === 'login' || modalState.view === 'signup' ? (
+                <>
+                  <OAuthButtons />
+                  <div className='text-gray-500 font-bold text-center mb-2'>OR</div>
+                  <AuthInputs />
+                </>
+              ) : (
+                <ResetPassword />
+              )}
+            
+          
           </div>
           {/* <Button type="submit" size="sm" className="px-3">
             <span className="sr-only">Copy</span>
@@ -79,3 +97,5 @@ const AuthModal:React.FC<AuthModalProps> = () => {
     );
 }
 export default AuthModal;
+
+
